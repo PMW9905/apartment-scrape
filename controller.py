@@ -1,5 +1,6 @@
 import json
 from apartment_web_scraper import ApartmentWebScraper
+from apartment_data import ApartmentData
 
 def main():
     # config file will always be defined as config.json
@@ -17,6 +18,15 @@ def main():
     
     
     apartmentWebScraper = ApartmentWebScraper(**discord_bot_config)
+
+    apartmentWebScraper.start_driver()
+
+    available_apartments = apartmentWebScraper.get_available_apartments_from_url('https://www.apartments.com/crest-at-park-central-dallas-tx/pedmzer/')
+
+    for apartment in available_apartments:
+        apartment.print_all_data()
+
+    apartmentWebScraper.quit_driver()
 
 
 
