@@ -1,4 +1,5 @@
 import json
+from apartment_web_scraper import ApartmentWebScraper
 
 def main():
     # config file will always be defined as config.json
@@ -8,13 +9,15 @@ def main():
     # Attempt to read json data into dict
     try:
         opened_json_file = open(config_file_path, 'r')
-        discord_bot_config = json.load(opened_json_file)
+        discord_bot_config = dict(json.load(opened_json_file))
         opened_json_file.close()
     except Exception as e:
         print(f'Unable to open config file due to the following error: \n{e}')
         quit()
     
-    print(discord_bot_config)
+    
+    apartmentWebScraper = ApartmentWebScraper(**discord_bot_config)
+
 
 
 if __name__ == "__main__":
