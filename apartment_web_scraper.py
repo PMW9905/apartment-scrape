@@ -48,23 +48,34 @@ class ApartmentWebScraper:
 
         available_apartments = []
 
-        all_units_div = self.driver.find_element(By.CLASS_NAME, "engrainLDPunitItemList")
+        pricing_view_div = self.driver.find_element(By.ID, "pricingView")
+
+        all_units_div = pricing_view_div.find_element(By.XPATH, ".//div[2]")
 
 
-        for unit_div in all_units_div.find_elements(By.CLASS_NAME, "engrainLDPunitItem"):
-            unit_number = unit_div.find_element(By.XPATH, ".//span[1]").get_attribute('innerText')
-            layout_name = unit_div.find_element(By.XPATH, ".//span[3]").get_attribute('innerText')
-            cost = unit_div.find_element(By.XPATH, ".//span[5]").get_attribute('innerText')
-            unit_details = unit_div.find_element(By.XPATH, ".//span[6]").get_attribute('innerText')
-            availability = unit_div.find_element(By.XPATH, ".//span[7]").get_attribute('innerText')
+        for unit_model_div in all_units_div.find_elements(By.XPATH, ".//div[@class='pricingGridItem multiFamily hasUnitGrid']"):
+            for unit_div in unit_model_div.find_elements(By.XPATH, ".//div[@class='unitGridContainer mortar-wrapper ']/div[1]/ul[1]/li"):
 
-            available_apartments.append(ApartmentData(
-                unit_number,
-                layout_name,
-                cost,
-                unit_details,
-                availability
-            ))
+
+                unit_number = unit_div.find_element(By.XPATH, ".//div[1]/div[1]/button[1]/span[2]").get_attribute('innerText').strip()
+                layout_name = unit_div.get_attribute('data-model').strip()
+                cost = unit_div.find_element(By.XPATH, ".//div[1]/div[2]/span[2]").get_attribute('innerText').strip()
+                square_footage = unit_div.find_element(By.XPATH, ".//div[1]/div[3]/span[2]").get_attribute('innerText').strip()
+                availability_outer_span = unit_div.find_element(By.XPATH, ".//div[1]/div[4]/div[1]/span[1]")
+
+                availability_redundant_span = availability_outer_span.find_element(By.XPATH, ".//span[1]").get_attribute('innerText')
+                availability_all_text = availability_outer_span.get_attribute('innerText')
+                availability = availability_all_text.replace(availability_redundant_span,'',1).strip()
+
+
+                available_apartments.append(ApartmentData(
+                    unit_number,
+                    layout_name,
+                    cost,
+                    square_footage,
+                    availability
+                ))
+
 
         return available_apartments
 

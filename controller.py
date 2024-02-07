@@ -27,8 +27,7 @@ def main():
         apartment.print_all_data()
 
     apartmentWebScraper.quit_driver()
-
-
+    
 
 if __name__ == "__main__":
     main()
