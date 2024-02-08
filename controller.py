@@ -17,16 +17,16 @@ def main():
         quit()
     
     
-    apartmentWebScraper = ApartmentWebScraper(**discord_bot_config)
+    apartment_web_scraper = ApartmentWebScraper(**discord_bot_config)
 
-    apartmentWebScraper.start_driver()
+    apartment_web_scraper.start_driver()
 
-    available_apartments = apartmentWebScraper.get_available_apartments_from_url('https://www.apartments.com/crest-at-park-central-dallas-tx/pedmzer/')
+    available_apartments = apartment_web_scraper.get_available_apartments_from_url('https://www.apartments.com/crest-at-park-central-dallas-tx/pedmzer/')
 
     for apartment in available_apartments:
         apartment.print_all_data()
 
-    apartmentWebScraper.quit_driver()
+    apartment_web_scraper.quit_driver()
     
 
 if __name__ == "__main__":
