@@ -19,10 +19,7 @@ default_driver_options = [
 
 class ApartmentWebScraper:
 
-    def __init__(self, discord_bot_key, whitelisted_user_ids):
-        self.discord_bot_key = discord_bot_key
-        self.whitelisted_user_ids = whitelisted_user_ids
-
+    def __init__(self):
         self.set_driver_options_to_default()
 
     def set_driver_options_to_default(self):

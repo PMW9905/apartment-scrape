@@ -17,7 +17,7 @@ def main():
         quit()
     
     
-    apartment_web_scraper = ApartmentWebScraper(**discord_bot_config)
+    apartment_web_scraper = ApartmentWebScraper()
 
     apartment_web_scraper.start_driver()
 
