@@ -1,11 +1,32 @@
 import discord
 
 class ApartmentBuddy(discord.Client):
+
+    def __init__(self, whitelisted_user_ids, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.whitelisted_user_ids = whitelisted_user_ids
+
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
 
     async def on_message(self, message):
-        print(f'Message from {message.author}: {message.content}')
+        if message.author == self.user or message.content[0] != '!' or message.channel != 'buddy-commands':
+            return
+        
+        if str(message.author) not in self.whitelisted_user_ids:
+            await message.channel.send(f'{message.author} does not have permission to send commands.')
+            return
+
+        command_title = message.content.split(' ')[0]
+
+        match command_title:
+            case '!ping':
+                await message.channel.send('pong!')
+            case '!help':
+                await message.channel.send('lol the only command right now is !ping')
+            case _:
+                await message.channel.send('Invalid command. Type !help for a list of possible commands.')
+                
 
 class DiscordBotManager:
     def __init__(self, discord_bot_token, whitelisted_user_ids):
@@ -19,7 +40,7 @@ class DiscordBotManager:
         intents = discord.Intents.default()
         intents.message_content = True
 
-        self.apartment_buddy = ApartmentBuddy(intents=intents)
+        self.apartment_buddy = ApartmentBuddy(whitelisted_user_ids=self.whitelisted_user_ids, intents=intents)
 
     def start_apartment_buddy(self):
         self.apartment_buddy.run(self.discord_bot_token)
