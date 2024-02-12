@@ -1,3 +1,4 @@
 *.ipynb
 config.json
 __pycache__/
+apartment.db

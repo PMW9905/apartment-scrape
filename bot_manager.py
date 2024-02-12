@@ -7,6 +7,7 @@ import asyncio
 
 from apartment_web_scraper import ApartmentWebScraper
 from apartment_data import ApartmentData
+from apartment_db import Database
 
 
 # Config file will always be defined as config.json
@@ -24,6 +25,11 @@ except Exception as e:
     print(e)
     quit()
 
+# Spawning apartment_db
+print('spawning apartment db...')
+apartment_db = Database('apartment.db')
+asyncio.run(apartment_db.create_tables())
+
 # Spawning apartment_web_scraper
 print('Spawning apartment_web_scraper...')
 apartment_web_scraper = ApartmentWebScraper()
@@ -38,11 +44,77 @@ intents.message_content = True
 print('Defining bot commands...')
 bot = commands.Bot(command_prefix='!', intents = intents)
 
+@bot.check
+async def globally_whitelisted(ctx):
+    return str(ctx.author.id) in discord_bot_config['whitelisted_user_ids']
+
 # Basic greet command
-@bot.command(name='greet')
+@bot.command(name='get-my-id')
 async def greet(ctx):
-    print('Sending greeting...')
-    await ctx.send('Hello!')
+    print('Sending user id...')
+    await ctx.send(ctx.author.id)
+
+@bot.command(name='add-complex')
+async def add_complex(ctx, complex_name: str, complex_url: str):
+    result = await apartment_db.add_complex(complex_name, complex_url)
+
+    if result:
+        await ctx.send(f"Complex '{complex_name}' added successfully.")
+    else:
+        await ctx.send(f"An error occured while trying to add '{complex_name}'.")
+
+
+@bot.command(name='remove-complex')
+async def remove_complex(ctx, complex_name: str):
+    result = await apartment_db.remove_complex(complex_name)
+
+    if result:
+        await ctx.send(f"Complex '{complex_name}' removed successfully.")
+    else:
+        await ctx.send(f"An error occured while trying to remove '{complex_name}'.")
+
+@bot.command(name='add-layout')
+async def add_layout(ctx, layout_name: str, complex_name: str):
+    result = await apartment_db.add_layout(layout_name, complex_name)
+
+    if result:
+        await ctx.send(f"Layout '{layout_name}' added to '{complex_name}' successfully.")
+    else:
+        await ctx.send(f"An error occured while trying to add '{layout_name} to {complex_name}'.")
+
+@bot.command(name='remove-layout')
+async def remove_layout(ctx, layout_name: str, complex_name: str):
+    result = await apartment_db.remove_layout(layout_name, complex_name)
+
+    if result:
+        await ctx.send(f"Layout '{layout_name}' removed from '{complex_name}' successfully.")
+    else:
+        await ctx.send(f"An error occured while trying to remove '{layout_name}' from '{complex_name}'.")
+
+@bot.command(name='list-layouts')
+async def list_layouts(ctx):
+    complex_layouts = await apartment_db.list_all_layouts()
+
+    if complex_layouts == False:
+        await ctx.send('Failed to retrieve layouts.')
+    else:
+        message = ["Complexes and their layouts:"]
+        for complex_name, layouts in complex_layouts.items():
+            layouts_str = ', '.join(layouts)
+            message.append(f"{complex_name}: {layouts_str}")
+        await ctx.send('\n'.join(message))
+
+@bot.command(name='list-complexes')
+async def list_complexes(ctx):
+    complexs = await apartment_db.list_all_complex()
+
+    if complexs == False:
+        await ctx.send('Failed to retrieve complexes.')
+    else:
+        message = ["Complexes:"]
+        for complex_name, url in complexs.items():
+            message.append(f"{complex_name}: {url}")
+        await ctx.send('\n'.join(message))
     
 # Demo get apartments command
 @bot.command(name='get-available-apartments')
