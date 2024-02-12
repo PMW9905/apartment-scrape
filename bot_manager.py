@@ -118,15 +118,28 @@ async def list_complexes(ctx):
     
 # Demo get apartments command
 @bot.command(name='get-available-apartments')
-async def get_available_apartments(ctx):
-    url = 'https://www.apartments.com/crest-at-park-central-dallas-tx/pedmzer/'
+async def get_available_apartments(ctx, complex_name):
+    url = await apartment_db.get_complex_url(complex_name)
+    url = str(url)
     loop = asyncio.get_running_loop()
 
     print('Getting available apartments...')
+    await ctx.send('Getting available apartments...')
     available_apartments = await loop.run_in_executor(None, apartment_web_scraper.get_available_apartments_from_url, url)
 
-    for unit in available_apartments: 
-        unit.print_all_data()
+    # Formatting the table such that there is consistant whitespace inbetween columns.
+    message = [
+        "```",
+        f"{'Unit':<6} | {'Layout':<15} | {'Cost':<8} | {'Sq Ft':<6} | {'Available':<8}",
+        "-"*60,
+    ]
+
+    for apt in available_apartments:
+        message.append(apt.get_formatted_string_for_discord_table())
+
+    message.append("```")
+
+    await ctx.send('\n'.join(message))
 
 print('Running bot...')
 bot.run(discord_bot_config['discord_bot_token'])

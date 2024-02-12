@@ -101,5 +101,21 @@ class Database:
         except Exception as e:
             print(f"Failed to list all complexes: {e}")
             return False
+        
+    async def get_complex_url(self, complex_name):
+        try:
+            query = '''
+                    SELECT name, url
+                    FROM complexes
+                    WHERE name = ?
+                    '''
+            async with aiosqlite.connect(self.db_file_path) as db:
+                async with db.execute(query,(complex_name,)) as cursor:
+                    async for row in cursor:
+                        url = row[1]
+                        return str(url)
+        except Exception as e:
+            print(f"Failed to retrieve complex url: {e}")
+            return False
             
 
