@@ -18,6 +18,13 @@ class Database:
                                 PRIMARY KEY(name, complex_name),
                                 FOREIGN KEY(complex_name) REFERENCES complexes(name)
                                 )""")
+                await db.execute("""CREATE TABLE IF NOT EXISTS apartments_notified (
+                                apartment_id INT NOT NULL,
+                                layout_name TEXT NOT NULL,
+                                complex_name TEXT NOT NULL,
+                                PRIMARY KEY(apartment_id, name, complex_name),
+                                FOREIGN KEY(complex_name) REFERENCES complexes(name)
+                                )""")
                 await db.commit()
                 return True
         except Exception as e:
@@ -117,5 +124,33 @@ class Database:
         except Exception as e:
             print(f"Failed to retrieve complex url: {e}")
             return False
-            
-
+        
+    async def mark_apartment_as_notified(self, unit_id, layout_name, complex_name):
+        try:
+            query = '''
+                    INSERT INTO apartments_notified
+                    VALUES (?, ?, ?)
+                    '''
+            async with aiosqlite.connect(self.db_file_path) as db:
+                await db.execute(query, (unit_id, layout_name, complex_name))
+                await db.commit()
+            return True
+        except Exception as e:
+            print(f"Failed to mark apartment as notified: {e}")
+            return False
+        
+    async def is_apartment_already_notified(self, unit_id, layout_name, complex_name):
+        try:
+            query = '''
+                    SELECT *
+                    FROM apartments_notified
+                    WHERE apartment_id = ? AND layout_name = ? AND complex_name = ?
+                    '''
+            async with aiosqlite.connect(self.db_file_path) as db:
+                async with db.execute(query,(unit_id,layout_name,complex_name)) as cursor:
+                    result = await cursor.fetchone()
+                    return result is None
+                
+        except Exception as e:
+            print(f"Failed to retrieve apartment from apartments_notified table: {e}")
+            return False
