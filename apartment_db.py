@@ -150,7 +150,7 @@ class Database:
             async with aiosqlite.connect(self.db_file_path) as db:
                 async with db.execute(query,(unit_id,layout_name,complex_name)) as cursor:
                     result = await cursor.fetchone()
-                    return result is None
+                    return not (result is None)
                 
         except Exception as e:
             print(f"Failed to retrieve apartment from apartments_notified table: {e}")
