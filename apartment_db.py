@@ -22,8 +22,9 @@ class Database:
                                 apartment_id INT NOT NULL,
                                 layout_name TEXT NOT NULL,
                                 complex_name TEXT NOT NULL,
-                                PRIMARY KEY(apartment_id, name, complex_name),
+                                PRIMARY KEY(apartment_id, layout_name, complex_name),
                                 FOREIGN KEY(complex_name) REFERENCES complexes(name)
+                                FOREIGN KEY(layout_name) REFERENCES complexes(name)
                                 )""")
                 await db.commit()
                 return True
