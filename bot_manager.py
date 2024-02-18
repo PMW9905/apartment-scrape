@@ -48,6 +48,63 @@ bot = commands.Bot(command_prefix='!', intents = intents)
 async def globally_whitelisted(ctx):
     return str(ctx.author.id) in discord_bot_config['whitelisted_user_ids']
 
+#@bot.loop(hour=1)
+@bot.command(name='hourly-scrape')
+async def hourly_scrape(ctx):
+    print('Performing hourly scrape...') 
+    # Grab complexes and layouts to scrape
+    all_subscribed_complexes = await apartment_db.list_all_complex()
+    all_subscribed_layouts = await apartment_db.list_all_layouts()
+
+    if len(all_subscribed_complexes) == 0 or len(all_subscribed_layouts) == 0:
+        print('No complexes/layouts to subscribe to...')
+        return
+    # Scrape those complexes/layouts
+    unannounced_wanted_apartments = []
+    
+    # Running loop for interacting with apartment web scraper
+    loop = asyncio.get_running_loop()
+
+    for complex_name, url in all_subscribed_complexes.items():
+        print(f'Scraping for {complex_name} at {url}')
+        scraped_apartments = await loop.run_in_executor(None, apartment_web_scraper.get_available_apartments_from_url, url)
+
+        print(f'Apartments scraped:')
+        for apt in scraped_apartments:
+            print(apt)        
+        # Only select the apartments that are wanted
+        print(f'Getting wanted layouts for {complex_name}')
+        wanted_layouts = all_subscribed_layouts[complex_name]
+        print(f'Getting wanted apartments for {complex_name}')
+        wanted_apartments = [
+           apt for apt in scraped_apartments
+           if apt.layout_name in wanted_layouts
+        ]
+
+        print('Wanted layouts:')
+        for apt in wanted_layouts:
+            print(apt)
+
+        print('Wanted apartments from scraped list:')
+        for apt in wanted_apartments:
+            print(apt)
+
+        print('Excluding apartments that have already been notified')
+        # For each wanted apartment, see if it's been visited yet
+        unannounced_wanted_apartments += [
+            apt for apt in wanted_apartments
+            if not await apartment_db.is_apartment_already_notified(apt.unit_number, apt.layout_name, complex_name)
+        ]
+
+    print('Marking unannounced wanted apartments as notified')
+    # mark unannounced wanted apartments as visited
+    for apt in unannounced_wanted_apartments:
+        await apartment_db.mark_apartment_as_notified(apt.unit_number, apt.layout_name, complex_name)
+
+    # Announce wanted apartments!
+    print(unannounced_wanted_apartments) 
+ 
+
 # Basic greet command
 @bot.command(name='get-my-id')
 async def greet(ctx):
@@ -115,7 +172,7 @@ async def list_complexes(ctx):
         for complex_name, url in complexs.items():
             message.append(f"{complex_name}: {url}")
         await ctx.send('\n'.join(message))
-    
+
 # Demo get apartments command
 @bot.command(name='get-available-apartments')
 async def get_available_apartments(ctx, complex_name):
