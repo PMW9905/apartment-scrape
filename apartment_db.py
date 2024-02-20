@@ -46,6 +46,7 @@ class Database:
         try:
             async with aiosqlite.connect(self.db_file_path) as db:
                 await db.execute("DELETE FROM complexes WHERE name = ?", (complex_name,))
+                await db.execute("DELETE FROM layouts WHERE complex_name = ?", (complex_name,))
                 await db.commit()
             return True
         except Exception as e:
